@@ -1,115 +1,12 @@
-import io
-import os
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from googleapiclient.http import MediaIoBaseDownload
-from apikey import APIKEY
+from source.get_video_ids import get_video_ids
+from source.get_video_information import get_video_information
+from source.buildinfo import buildinfo  # This is just a python file with APIKEY as a variable
+from source.get_video_transcripts import get_video_transcripts
 
-# Set DEVELOPER_KEY to the API key value from the APIs & auth > Registered apps
-# tab of
-#   https://cloud.google.com/console
-# Please ensure that you have enabled the YouTube Data API for your project.
+video_ids = get_video_ids("starcraft", 10, buildinfo)
 
-DEVELOPER_KEY = APIKEY
-YOUTUBE_API_SERVICE_NAME = 'youtube'
-YOUTUBE_API_VERSION = 'v3'
+video_information = get_video_information(video_ids, buildinfo)
 
-
-def make_youtubevideo_url(video_id):
-    url = "https://www.youtube.com/watch?v=" + video_id
-
-    return url
-
-
-def get_video_ids(query, max_results):
-    # builds the youtube API object
-    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-                    developerKey=DEVELOPER_KEY)
-
-    # Call the search.list method to retrieve results matching the specified
-    # query term.
-    search_response = youtube.search().list(
-        q=query,
-        part='id,snippet',
-        relevanceLanguage="en",
-        maxResults=max_results,
-    ).execute()
-
-    # Starts a blank list
-    videos_ids = []
-
-    # Add each result to the appropriate list, and then display the lists of
-    # matching videos, channels, and playlists.
-    for search_result in search_response.get('items', []):
-        if search_result['id']['kind'] == 'youtube#video':
-            videos_ids.append((search_result['id']['videoId']))  # youtubevideo URL
-
-    # In order for it to work the video api requests,
-    stringifed_videos_ids = ",".join(videos_ids)
-
-    return stringifed_videos_ids
-
-
-def get_video_information(list_of_video_ids):
-    # builds the youtube API object
-    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-                    developerKey=DEVELOPER_KEY)
-
-    # Call the search.list method to retrieve results matching the video ids
-    request = youtube.videos().list(
-        part="snippet,contentDetails,statistics",
-        id=list_of_video_ids
-    )
-
-    # execute's the command
-    video_information = request.execute()
-
-    # returns the items
-    return video_information['items']
-
-
-youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-                developerKey=DEVELOPER_KEY)
-
-testing = get_video_information(get_video_ids("starcraft", 10))
-
-request = youtube.captions().download(
-    id="N2BePn4bhvih7yKQLXhp20OT-jNuF-He_qJO6k7XFFw"
-)
-
-# TODO: For this request to work, you must replace "YOUR_FILE"
-#       with the location where the downloaded content should be written.
-fh = io.FileIO("YOUR_FILE", "wb")
-
-download = MediaIoBaseDownload(fh, request)
-complete = False
-while not complete:
-    status, complete = download.next_chunk()
-
-
-
-
-
-
-
-
-
-# caption_id = "N2BePn4bhvih7yKQLXhp20OT-jNuF-He_qJO6k7XFFw"
-# subtitle = youtube.captions().download(
-#     id=caption_id,
-# ).execute()
-#
-# print("First line of caption track: %s" % subtitle)
-#
-# request = youtube.captions().download(
-#     id="N2BePn4bhvih7yKQLXhp20OT-jNuF-He_qJO6k7XFFw"
-# )
-# # TODO: For this request to work, you must replace "YOUR_FILE"
-# #       with the location where the downloaded content should be written.
-# fh = io.FileIO("YOUR_FILE", "wb")
-#
-# download = MediaIoBaseDownload(fh, request)
-# complete = False
-# while not complete:
-#     status, complete = download.next_chunk()
-
+video_transcripts = get_video_transcripts(video_ids[0])
