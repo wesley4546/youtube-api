@@ -1,11 +1,16 @@
+import io
+import os
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaIoBaseDownload
+from apikey import APIKEY
 
 # Set DEVELOPER_KEY to the API key value from the APIs & auth > Registered apps
 # tab of
 #   https://cloud.google.com/console
 # Please ensure that you have enabled the YouTube Data API for your project.
-DEVELOPER_KEY = ''
+
+DEVELOPER_KEY = APIKEY
 YOUTUBE_API_SERVICE_NAME = 'youtube'
 YOUTUBE_API_VERSION = 'v3'
 
@@ -68,33 +73,43 @@ youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
 
 testing = get_video_information(get_video_ids("starcraft", 10))
 
-caption_id = "N2BePn4bhvih7yKQLXhp20OT-jNuF-He_qJO6k7XFFw"
-subtitle = youtube.captions().download(
-    id=caption_id,
-).execute()
+request = youtube.captions().download(
+    id="N2BePn4bhvih7yKQLXhp20OT-jNuF-He_qJO6k7XFFw"
+)
 
-print("First line of caption track: %s" % subtitle)
+# TODO: For this request to work, you must replace "YOUR_FILE"
+#       with the location where the downloaded content should be written.
+fh = io.FileIO("YOUR_FILE", "wb")
 
-"""
-if __name__ == '__main__':
+download = MediaIoBaseDownload(fh, request)
+complete = False
+while not complete:
+    status, complete = download.next_chunk()
 
-    keyword = input("Input search: ")
-    nm_of_results = input("Maximum number of results: ")
-    try:
-        youtube_search(keyword, nm_of_results)
-    except HttpError as e:
-        print('An HTTP error %d occurred:\n%s' % (e.resp.status, e.content))
-"""
-"""
-def get_video_statistics(list_of_video_ids):
 
-    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-                    developerKey=DEVELOPER_KEY)
 
-    # Call the search.list method to retrieve results matching the specified
-    # query term.
-    search_response = youtube.videos().list(
-        part="snippet,contentDetails,statistics",
-        ids = list_of_video_ids
-    ).execute()
-"""
+
+
+
+
+
+
+# caption_id = "N2BePn4bhvih7yKQLXhp20OT-jNuF-He_qJO6k7XFFw"
+# subtitle = youtube.captions().download(
+#     id=caption_id,
+# ).execute()
+#
+# print("First line of caption track: %s" % subtitle)
+#
+# request = youtube.captions().download(
+#     id="N2BePn4bhvih7yKQLXhp20OT-jNuF-He_qJO6k7XFFw"
+# )
+# # TODO: For this request to work, you must replace "YOUR_FILE"
+# #       with the location where the downloaded content should be written.
+# fh = io.FileIO("YOUR_FILE", "wb")
+#
+# download = MediaIoBaseDownload(fh, request)
+# complete = False
+# while not complete:
+#     status, complete = download.next_chunk()
+
