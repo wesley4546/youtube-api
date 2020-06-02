@@ -48,14 +48,14 @@ def main():
     Function starts the process of extracting videos from YouTube using a user-input search
 
     I'm not sure of any restrictions when it comes to API calls from other modules in this program so I have a delay
-    of 2 seconds between each function call in the looping process and a 2 second delay between each URL. If this causes
-    and issue then it can certainly be changed.
+    of 5 seconds between each function call in the looping process If this causes and issue then it can certainly
+    be changed.
     """
     url_number = 1
 
     # Takes a YouTube URL as input
     input_keyword = input("Enter YouTube Search: ")
-    input_results = int(input("Enter # of Max Results: ")) + 1
+    input_results = int(input("Enter # of Max Results: "))
 
     # Data used as each column
     csv_column_names = ['keyword',
@@ -77,16 +77,32 @@ def main():
         writer = csv.writer(file)
         writer.writerow(csv_column_names)
 
+    # Gets the list of video IDs
     video_ids = get_video_ids(input_keyword, input_results, buildinfo)
 
-    # Keeps track of the iteration of the URLS
-    list_of_urls_index_counter = 0
-
+    # Starts loop through video IDs
     for id in video_ids:
+
+        print(f"Starting video ID:{id}")
+        time.sleep(5)
+
+        # Gets the video information
         video_information = get_video_information(id, buildinfo)
 
+        # Testing for missing values
+        if not 'commentCount' in video_information[0]['statistics']:
+            video_information[0]['statistics']['commentCount'] = "Not Found"
+
+        if not 'likeCount' in video_information[0]['statistics']:
+            video_information[0]['statistics']['likeCount'] = "Not Found"
+
+        if not 'dislikeCount' in video_information[0]['statistics']:
+            video_information[0]['statistics']['dislikeCount'] = "Not Found"
+
+        # Gets the video transcription
         video_transcripts = get_video_transcripts(id)
 
+        # Adds them to the YouTube Class
         yt_v = youtubevideo(
             id=video_information[0]['id'],
             title=video_information[0]['snippet']['title'],
@@ -101,9 +117,7 @@ def main():
             transcription=video_transcripts
         )
 
-        # Keeps track of the iteration of the URLS
-        list_of_urls_index_counter = 0
-
+        # Rows to be written to CSV
         csv_file_rows = (input_keyword,
                          yt_v.id,
                          yt_v.title,
@@ -115,12 +129,17 @@ def main():
                          yt_v.comment_count,
                          yt_v.channel_id,
                          yt_v.channel_name,
-                         yt_v.transcription)
+                         yt_v.transcription
+                         )
 
+        # Writes the rows to the files
         with open(paste_filename(input_keyword), 'a', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(csv_file_rows)
-        time.sleep(5)
+
+        # Messaging
+        print(f"{url_number}/{input_results} Complete...")
+        url_number += 1
 
     print("Done!")
 
